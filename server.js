@@ -1,21 +1,22 @@
-process.stdout.isTTY = true;
-process.env.NODE_DISABLE_COLORS = '1';
-
-const express = require("express");
-const path = require("path");
-
-const app = express();
-const port = 3000;
-
-const appName = process.env.CONTAINER_NAME || "MyWebServer";
-
-app.use('/', (req, res) => {
-    console.error(`Request served by ${appName}`);
+const express = require('express');
+const path = require('path');
+const { fork } = require('child_process');
+ 
+// If a PORT is passed, run a single server
+if (process.env.PORT) {
+  const app = express();
+  app.use(express.static(__dirname));
+  app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
-    
-});
-
-app.listen(port, () => {
-    console.log(`${appName} is listening on port ${port}. Success!`);
-})
-
+  });
+  const PORT = process.env.PORT;
+  app.listen(PORT, () => {
+    console.log(`Portfolio running at http://localhost:${PORT}`);
+  });
+} else {
+  
+  const ports = [3001, 3002, 3003];
+  ports.forEach(port => {
+    fork(__filename, [], { env: { PORT: port } });
+  });
+}
